@@ -1,0 +1,186 @@
+﻿@model List<TravelPlanner.Data.Entities.Country>
+@{
+    ViewData["Title"] = "Tahmin Raporları";
+}
+
+<!-- Başlık Alanı -->
+<div class="row mt-4 mb-4">
+    <div class="col-12">
+        <h2 class="fw-bold"><i class="fa-solid fa-chart-line text-primary me-2"></i> Zaman Serisi Tahminleri</h2>
+        <p class="text-muted">Türkiye, İspanya, Norveç ve Rusya için ARIMA & LSTM hibrit model tahmin sonuçları.</p>
+    </div>
+</div>
+
+<!-- Filtreleme Paneli -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-body p-4">
+                <form id="filterForm" class="row g-3 align-items-end">
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Ülke Seçin</label>
+                        <select class="form-select rounded-3" id="countrySelect" name="countryId">
+                            <option value="0" selected>-- Ülke Seçin --</option>
+                            @if (Model != null && Model.Any())
+                            {
+                                foreach (var country in Model)
+                                {
+                                    <option value="@country.Id">@country.Name</option>
+                                }
+                            }
+                            else
+                            {
+                                <!-- Veritabanı boşsa geçici test verileri -->
+                                <option value="1">Türkiye</option>
+                                <option value="2">İspanya</option>
+                                <option value="3">Norveç</option>
+                                <option value="4">Rusya</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Veri Tipi (Metrik)</label>
+                        <select class="form-select rounded-3" id="metricSelect" name="metricType">
+                            <option value="TouristCount" selected>Turist Sayısı (Tahmini)</option>
+                            <option value="AccommodationPrice">Ortalama Konaklama Fiyatı</option>
+                            <option value="Inflation">Enflasyon Beklentisi</option>
+                            <option value="ExchangeRate">Döviz Kuru</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <button type="button" id="btnGetir" class="btn btn-primary w-100 rounded-3">
+                            <i class="fa-solid fa-magnifying-glass me-2"></i> Verileri Getir
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Grafik Alanı -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
+                <h5 class="fw-bold" id="chartTitle">Seçilen Kriterlere Göre Gelecek Projeksiyonu</h5>
+            </div>
+            <div class="card-body p-4">
+                <!-- Grafik için gerekli yükseklik (height) ayarı -->
+                <div style="position: relative; height:400px; width:100%">
+                    <canvas id="forecastChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Chart.js Kütüphanesi -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        // Global Grafik Değişkeni
+        let myChart = null;
+
+        $(document).ready(function () {
+
+            // Sayfa yüklendiğinde boş bir grafik çizelim
+            renderChart(["Kış", "İlkbahar", "Yaz", "Sonbahar"], [0, 0, 0, 0], "Veri Bekleniyor...");
+
+            // "Verileri Getir" Butonuna tıklandığında AJAX ile veriyi çek
+            $("#btnGetir").click(function () {
+                let countryId = $("#countrySelect").val();
+                let metricType = $("#metricSelect").val();
+
+                if(countryId == "0") {
+                    alert("Lütfen bir ülke seçiniz!");
+                    return;
+                }
+
+        // AJAX İsteği
+        $.ajax({
+            url: '/Forecast/GetForecastData',
+            type: 'POST',
+            data: { countryId: countryId, metricType: metricType },
+            success: function (res) {
+                if(res.isSuccess) {
+                    let labelName = $("#metricSelect option:selected").text();
+                    renderChart(res.labels, res.values, labelName);
+                } else {
+                    // Veri yoksa grafiği sıfırla ve kullanıcıya mesajı göster
+                    renderChart(["Veri Yok"], [0], "Sonuç Bulunamadı");
+                    alert(res.message);
+                }
+            },
+            error: function () {
+                alert("Sunucuya bağlanırken bir hata oluştu.");
+            }
+        });
+            });
+        });
+
+        // Chart.js Çizim Fonksiyonu
+        function renderChart(labelsArray, dataArray, labelName) {
+            const ctx = document.getElementById('forecastChart').getContext('2d');
+
+            // Eğer daha önceden çizilmiş bir grafik varsa, yenisini çizmeden önce eskini yok et (destroy)
+            if (myChart != null) {
+                myChart.destroy();
+            }
+
+            // Gradient Renk (Çizginin altını maviye doğru dolduran şık efekt)
+            let gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(13, 110, 253, 0.5)'); // Bootstrap primary
+            gradient.addColorStop(1, 'rgba(13, 110, 253, 0.0)');
+
+            myChart = new Chart(ctx, {
+                type: 'line', // Zaman serisi için en uygunu çizgi grafiktir
+                data: {
+                    labels: labelsArray,
+                    datasets: [{
+                        label: labelName,
+                        data: dataArray,
+                        borderColor: '#0d6efd',
+                        backgroundColor: gradient,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#0d6efd',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        fill: true,
+                        tension: 0.4 // Çizgiyi yumuşatır (Kıvrımlı yapar)
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+}
