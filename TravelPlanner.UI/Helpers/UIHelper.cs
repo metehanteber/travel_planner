@@ -9,39 +9,105 @@ namespace TravelPlanner.UI.Helpers
 {
     public static class UIHelper
     {
-        public static ForecastChartModel GetChartData<T>(IRepository<T>? repository = null, long? countryId = null, CultureInfo? cultureInfo = null) where T : EntityBase, IMetrics
+        public static LayoutViewModel GetLayoutData()
         {
-            if (repository is null) repository = Repository<T>.Create();
-            if (cultureInfo is null) cultureInfo = CultureInfo.CurrentCulture;
-            var model = new ForecastChartModel
+            var model = new LayoutViewModel
             {
-                values = new List<decimal>(),
-                labels = new List<string>()
+                Countries = new List<Country>()
             };
-            if (repository is null) repository = Repository<T>.Create();
-            var query = repository.GetQueryable();
-            if (countryId.HasValue && countryId.Value > 0) query = query.Where(x => x.CountryId == countryId.Value);
-            var list = query.ToList();
-            if (list is null || list.Count < 1) return model;
-
-            if (typeof(T) == typeof(ExchangeRate))
+            try
             {
-                var data = list.Select(c => c as ExchangeRate).Where(x => x is not null).ToList() ?? new List<ExchangeRate?>();
-                model.labels = data.Select(x => x.DateRecorded.ToString("MMMM yyyy", cultureInfo)).ToList();
-                model.values = data.Select(x => x.Rate).ToList();
+                IRepository<Country> countriesService = Repository<Country>.Create();
+                model.Countries = countriesService.GetQueryable().OrderBy(c => c.Id).ToList();
+                return model;
             }
-            else if (typeof(T) == typeof(TourismMetric))
+            catch
             {
-                var data = list.Select(c => c as TourismMetric).Where(x => x is not null).ToList() ?? new List<TourismMetric?>();
-                var dates = data.Select(x => x is null ? DateTime.MinValue : x.DateRecorded).Distinct().OrderBy(x => x).ToList();
+                return model;
+            }
+        }
+
+        public static void GetPastData(string metricType, long countryId, ref List<string> labels, ref List<decimal> values)
+        {
+            labels = new List<string>();
+            values = new List<decimal>();
+            if (metricType == "TouristCount" || metricType == "AccommodationPrice")
+            {
+                IRepository<TourismMetric> tourismService = Repository<TourismMetric>.Create();
+                var data = tourismService.GetQueryable(x => x.CountryId == countryId).ToList();
+                var dates = data.Select(x => x.DateRecorded).Distinct().OrderBy(x => x).ToList();
                 foreach (var date in dates)
                 {
-                    model.values.Add(data.Where(x => x is not null && x.DateRecorded == date).Sum(x => x?.TouristCount ?? 0).ToDecimal() ?? 0);
-                }
-                model.labels = dates.Select(x => x.ToString("MMMM yyyy", cultureInfo)).ToList();
-            }
-            return model;
+                    decimal sum = 0;
+                    if (metricType == "AccommodationPrice")
+                    {
+                        sum = data.Where(x => x.DateRecorded == date).Sum(x => x.AvgAccommodationPrice ?? 0);
+                    }
+                    else
+                    {
+                        sum = data.Where(x => x.DateRecorded == date).Sum(x => x.TouristCount ?? 0);
+                        sum = Math.Round(sum);
+                    }
 
+                    labels.Add(date.ToString("MMM yyyy"));
+                    values.Add(sum);
+                }
+            }
+            else if (metricType == "ExchangeRate")
+            {
+                IRepository<ExchangeRate> exchangeService = Repository<ExchangeRate>.Create();
+                var data = exchangeService.GetQueryable(x => x.CountryId == countryId).ToList();
+                var dates = data.Select(x => x.DateRecorded).Distinct().OrderBy(x => x).ToList();
+                foreach (var date in dates)
+                {
+                    var sum = data.Where(x => x.DateRecorded == date).Sum(x => x.Rate);
+                    labels.Add(date.ToString("MMM yyyy"));
+                    values.Add(sum);
+                }
+            }
+            else if (metricType == "InflationRate")
+            {
+                IRepository<InflationRate> inflationService = Repository<InflationRate>.Create();
+                var data = inflationService.GetQueryable(x => x.CountryId == countryId).ToList();
+                var dates = data.Select(x => x.DateRecorded).Distinct().OrderBy(x => x).ToList();
+                foreach (var date in dates)
+                {
+                    var sum = data.Where(x => x.DateRecorded == date).Sum(x => x.Rate);
+                    labels.Add(date.ToString("MMM yyyy"));
+                    values.Add(sum);
+                }
+            }
+        }
+
+        public static void GetForecastData(string metricType, long countryId, ref List<string> labels, ref List<decimal> values)
+        {
+            if (labels is null) labels = new List<string>();
+            if (values is null) values = new List<decimal>();
+
+            var forecastService = Repository<Forecast>.Create();
+            var data = forecastService.GetQueryable(x => x.CountryId == countryId && x.MetricType == metricType).OrderBy(x => x.ForecastDate).ToList();
+
+            if (data is null || data.Count < 1)
+            {
+                return;
+            }
+
+            var cultureInfo = new CultureInfo("tr-TR");
+
+            var dates = data.Select(x => x.ForecastDate).Distinct().OrderBy(x => x).ToList();
+
+            foreach (var date in dates)
+            {
+                var value = data.Where(x => x.ForecastDate == date).Sum(x => x.PredictedValue);
+                if (metricType == "TouristCount") value = Math.Round(value);
+                values.Add(value);
+                labels.Add(date.ToString("MMM yyyy", cultureInfo));
+            }
+        }
+
+        public static string[] GetUIColors()
+        {
+            return ["#32a852", "#a2a832", "#a83832", "#3279a8", "#878787", "#111111", "#FEFEFE"];
         }
     }
 }

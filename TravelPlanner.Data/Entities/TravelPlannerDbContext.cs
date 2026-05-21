@@ -80,9 +80,6 @@ namespace TravelPlanner.Data.Entities
                 entity.HasOne(d => d.Country).WithMany(p => p.Cities).HasForeignKey(d => d.CountryId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("fk_cities_countries");
             });
 
-            // ==========================================
-            // EKONOMİK VERİLER
-            // ==========================================
             modelBuilder.Entity<ExchangeRate>(entity =>
             {
                 entity.ToTable("exchange_rates");
@@ -115,9 +112,6 @@ namespace TravelPlanner.Data.Entities
                 entity.HasOne(d => d.Country).WithMany(p => p.InflationRates).HasForeignKey(d => d.CountryId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("fk_inflation_rates_countries");
             });
 
-            // ==========================================
-            // TURİZM METRİKLERİ VE TAHMİNLER
-            // ==========================================
             modelBuilder.Entity<TourismMetric>(entity =>
             {
                 entity.ToTable("tourism_metrics");

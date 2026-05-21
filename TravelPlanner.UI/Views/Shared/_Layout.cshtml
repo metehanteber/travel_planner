@@ -1,105 +1,111 @@
-﻿<!DOCTYPE html>
+﻿@using TravelPlanner.UI.Helpers
+@{
+    var _layoutData = UIHelper.GetLayoutData();
+    var colors = UIHelper.GetUIColors();
+}
+
+<!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Global Turizm ve Ekonomi Tahmincisi</title>
-    
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- FontAwesome (İkonlar için) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
-    
-    <!-- Google Fonts (Daha modern bir yazı tipi) -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Kendi Custom CSS Dosyamız -->
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <title>@ViewData["Title"] - Seyahat Asistanı</title>
+
+    <link type="text/css" href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+
+    <link type="text/css" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <link type="text/css" rel="stylesheet" href="/css/site.css" />
 </head>
-<body>
-    <!-- Üst Menü (Navbar) -->
+<body style="margin-bottom: 0px !important;">
+
     <header>
-        <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top custom-navbar">
+        <nav style="box-shadow: 0px 0px 5px black;" class="navbar navbar-expand-lg navbar-light bg-white fixed-top custom-navbar">
             <div class="container">
-                <!-- Logo Kısmı -->
-                <a class="navbar-brand fw-bold text-primary" asp-area="" asp-controller="Home" asp-action="Index">
-                    <i class="fa-solid fa-earth-americas me-2"></i>TravelForecast
+
+                <a class="navbar-brand fw-bold text-primary" href="/">
+                    <i class="fa-solid fa-earth-americas me-2"></i>Seyahat Asistanı
                 </a>
-                
-                <!-- Mobil Menü Butonu -->
+
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                
-                <!-- Menü Linkleri -->
+
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">
+                            <a class="nav-link text-dark" href="/">
                                 <i class="fa-solid fa-house fa-sm me-1"></i> Ana Sayfa
                             </a>
                         </li>
-                        
-                        <!-- Ülkeler Dropdown -->
+
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-dark" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fa-solid fa-map-location-dot fa-sm me-1"></i> Duraklar
+                            <a class="nav-link dropdown-toggle text-dark" href="javascript:void(0);" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa-solid fa-map-location-dot fa-sm me-1"></i> Ülkeler
                             </a>
                             <ul class="dropdown-menu custom-dropdown" aria-labelledby="navbarDropdown">
-                                <li><a class="dropdown-item" href="#"><i class="fa-solid fa-location-dot text-danger me-2"></i>Türkiye</a></li>
-                                <li><a class="dropdown-item" href="#"><i class="fa-solid fa-location-dot text-warning me-2"></i>İspanya</a></li>
-                                <li><a class="dropdown-item" href="#"><i class="fa-solid fa-location-dot text-primary me-2"></i>Norveç</a></li>
-                                <li><a class="dropdown-item" href="#"><i class="fa-solid fa-location-dot text-info me-2"></i>Rusya</a></li>
+                                @for (int i = 0; i < _layoutData.Countries.Count; i++)
+                                {
+                                    var country = _layoutData.Countries[i];
+
+                                    <li>
+                                        <a class="dropdown-item" href="/country/@country.Code.ToLower().Replace("ı", "i")">
+                                            <i class="fa-solid fa-location-dot me-2" style="color: @colors[i % colors.Length];"></i>@country.Name
+                                        </a>
+                                    </li>
+                                }
                             </ul>
                         </li>
-                        
+
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Forecast" asp-action="Index">
-                                <i class="fa-solid fa-chart-line fa-sm me-1"></i> Tahmin Raporları
+                            <a class="nav-link text-dark" href="/forecast">
+                                <i class="fa-solid fa-chart-line fa-sm me-1"></i> Tahminler
                             </a>
                         </li>
                     </ul>
-                    
-                    <!-- Sağ Taraf (Giriş / Yönetim Paneli için yer tutucu) -->
-                    <div class="d-flex">
-                        <a href="#" class="btn btn-outline-primary btn-sm rounded-pill px-4">
-                            <i class="fa-solid fa-user me-1"></i> Giriş Yap
-                        </a>
-                    </div>
                 </div>
             </div>
         </nav>
     </header>
 
-    <!-- Ana İçerik Alanı -->
-    <div class="container main-container">
+    <div class="container main-container" id="main-container" style="margin-top: 90px !important;">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
 
-    <!-- Alt Kısım (Footer) -->
     <footer class="border-top footer text-muted bg-white mt-auto py-3">
         <div class="container d-flex justify-content-between align-items-center">
-            <span>&copy; @DateTime.Now.Year - TravelForecast Arayüzü</span>
             <span>
                 <a href="#" class="text-muted me-3"><i class="fa-brands fa-github fa-lg"></i></a>
                 <a href="#" class="text-muted"><i class="fa-brands fa-linkedin fa-lg"></i></a>
             </span>
         </div>
     </footer>
+    <script type="text/javascript" src="/lib/jquery/dist/jquery.min.js"></script>
+    <script type="text/javascript" src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="/js/site.js"></script>
 
-    <!-- jQuery (Mutlaka Bootstrap JS'den önce gelmeli) -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    
-    <!-- Bootstrap 5 Bundle JS (Popper.js dahildir, dropdownlar için şart) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Kendi Custom JS Dosyamız -->
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    
-    <!-- Alt Sayfalardan Gelecek Scriptler İçin Bölüm -->
     @await RenderSectionAsync("Scripts", required: false)
+
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            loadContainerResizer();
+        });
+
+        function resizeContainer() {
+            let c = document.getElementById('main-container');
+            c.style.minHeight = (innerHeight - 150).toString() + "px";
+        }
+
+        function loadContainerResizer() {
+            window.onresize = function() {
+                resizeContainer();
+            }
+            setTimeout(resizeContainer, 0);
+        }
+    </script>
 </body>
 </html>

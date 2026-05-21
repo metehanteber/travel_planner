@@ -3,6 +3,8 @@ using System.Linq;
 using System.Globalization;
 using TravelPlanner.Business.Repo;
 using TravelPlanner.Data.Entities;
+using TravelPlanner.Core;
+using TravelPlanner.UI.Helpers;
 
 namespace TravelPlanner.UI.Controllers
 {
@@ -10,54 +12,27 @@ namespace TravelPlanner.UI.Controllers
     {
         public IActionResult Index()
         {
-            var countryRepo = Repository<Country>.Create();
-            var countries = countryRepo.GetQueryable().OrderBy(x => x.Name).ToList();
+            var countriesService = Repository<Country>.Create();
+            var countries = countriesService.GetQueryable().OrderBy(x => x.Id).ToList();
 
             return View(countries);
         }
 
         [HttpPost]
-        public IActionResult GetForecastData(long countryId, string metricType)
+        public IActionResult GetForecastData(long countryId, string metricType, int dataType)
         {
-            // 1. Forecast tablosu için repository'yi ayağa kaldır
-            var forecastRepo = Repository<Forecast>.Create();
-
-            // 2. İlgili ülkeye ve metrik tipine göre verileri çek, tarihe göre sırala
-            var forecastData = forecastRepo.GetQueryable(x =>
-                    x.CountryId == countryId &&
-                    x.MetricType == metricType)
-                .OrderBy(x => x.ForecastDate)
-                .ToList();
-
-            // 3. Eğer tabloda henüz veri yoksa, arayüzü uyarmak için false dön
-            if (forecastData == null || !forecastData.Any())
+            List<string> labels = new List<string>();
+            var values = new List<decimal>();
+            if (dataType.ContainedIn(0, 2))
             {
-                return Json(new
-                {
-                    isSuccess = false,
-                    message = "Bu kriterlere uygun tahmin verisi henüz oluşturulmamış."
-                });
+                UIHelper.GetPastData(metricType, countryId, ref labels, ref values);
+            }
+            if (dataType.ContainedIn(1, 2))
+            {
+                UIHelper.GetForecastData(metricType, countryId, ref labels, ref values);
             }
 
-            // 4. Chart.js için verileri formatla
-            // Tarihleri "Oca 2026", "Şub 2026" gibi Türkçe ve okunaklı bir formata çeviriyoruz
-            var cultureInfo = new CultureInfo("tr-TR");
-
-            var dates = forecastData.Select(x => x.ForecastDate).Distinct().OrderBy(x => x).ToList();
-            var data = new List<decimal>();
-
-            foreach (var date in dates)
-            {
-                var value = forecastData.Where(x => x.ForecastDate == date).Sum(x => x.PredictedValue);
-                if (metricType == "TouristCount") value = Math.Round(value);
-                data.Add(value);
-            }
-
-
-            var labels = dates.Select(x => x.ToString("MMM yyyy", cultureInfo)).ToArray();
-
-            // 5. Veriyi JSON olarak UI'a fırlat
-            return Json(new { isSuccess = true, labels = labels, values = data });
+            return Json(new { isSuccess = true, labels, values });
         }
     }
 }

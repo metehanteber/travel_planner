@@ -1,27 +1,27 @@
-﻿@{
+﻿@using TravelPlanner.Data.Entities
+@model List<Country>
+
+@{
     ViewData["Title"] = "Ana Sayfa";
 }
 
-<!-- Karşılama (Hero) Alanı -->
 <div class="row mb-4 mt-3">
     <div class="col-12">
         <div class="card border-0 shadow-sm rounded-4" style="background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%); color: white;">
             <div class="card-body p-5">
-                <h1 class="display-5 fw-bold"><i class="fa-solid fa-plane-departure me-3"></i>Global Turizm Planlama Asistanı</h1>
+                <h1 class="display-5 fw-bold"><i class="fa-solid fa-plane-departure me-3"></i>Turizm Planlayıcı</h1>
                 <p class="lead mt-3">
-                    Zaman serisi (ARIMA & LSTM) tahminleme modelleriyle Türkiye, İspanya, Norveç ve Rusya'nın turizm, döviz ve enflasyon verilerini analiz edin.
+                    Ülkelerin turizm, döviz ve enflasyon verilerini analiz edin.
                 </p>
                 <a href="/Forecast" class="btn btn-light btn-lg text-primary fw-bold rounded-pill mt-2 shadow-sm">
-                    Tahminlere Göz At <i class="fa-solid fa-arrow-right ms-2"></i>
+                    <i class="fa-solid fa-chart-line"></i> Tahminler <i class="fa-solid fa-arrow-right ms-2"></i>
                 </a>
             </div>
         </div>
     </div>
 </div>
 
-<!-- İstatistik Kartları -->
 <div class="row mb-5">
-    <!-- Ülke Sayısı -->
     <div class="col-md-4 mb-3">
         <div class="card border-0 shadow-sm rounded-4 h-100">
             <div class="card-body d-flex align-items-center">
@@ -29,14 +29,13 @@
                     <i class="fa-solid fa-earth-europe fa-2x text-primary"></i>
                 </div>
                 <div class="flex-grow-1 ms-3">
-                    <h6 class="text-muted mb-0">Takip Edilen Ülke</h6>
+                    <h6 class="text-muted mb-0">Ülke Sayısı</h6>
                     <h2 class="fw-bold mb-0">@ViewBag.CountryCount</h2>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Şehir Sayısı -->
     <div class="col-md-4 mb-3">
         <div class="card border-0 shadow-sm rounded-4 h-100">
             <div class="card-body d-flex align-items-center">
@@ -44,14 +43,13 @@
                     <i class="fa-solid fa-city fa-2x text-success"></i>
                 </div>
                 <div class="flex-grow-1 ms-3">
-                    <h6 class="text-muted mb-0">Analiz Edilen Şehir</h6>
+                    <h6 class="text-muted mb-0">Şehir Sayısı</h6>
                     <h2 class="fw-bold mb-0">@ViewBag.CityCount</h2>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Tahmin Verisi Sayısı -->
     <div class="col-md-4 mb-3">
         <div class="card border-0 shadow-sm rounded-4 h-100">
             <div class="card-body d-flex align-items-center">
@@ -59,47 +57,10 @@
                     <i class="fa-solid fa-brain fa-2x text-warning"></i>
                 </div>
                 <div class="flex-grow-1 ms-3">
-                    <h6 class="text-muted mb-0">Üretilen Model Tahmini</h6>
+                    <h6 class="text-muted mb-0">Tahmin Sayısı</h6>
                     <h2 class="fw-bold mb-0">@ViewBag.ForecastCount</h2>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<!-- Gelecek Tahmin Grafiği İçin Boş Alan (Chart.js buraya gelecek) -->
-<div class="row">
-    <div class="col-12">
-        <div class="card border-0 shadow-sm rounded-4">
-            <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
-                <h5 class="fw-bold"><i class="fa-solid fa-chart-area text-primary me-2"></i>Genel Trend Özeti</h5>
-            </div>
-            <div class="card-body p-4">
-                <!-- Eğer veritabanı boşsa kullanıcıya şık bir uyarı verelim -->
-                @if (ViewBag.ForecastCount == 0)
-                {
-                    <div class="text-center py-5 text-muted">
-                        <i class="fa-solid fa-database fa-3x mb-3 text-secondary opacity-50"></i>
-                        <h5>Henüz Tahmin Verisi Bulunamadı</h5>
-                        <p>Arka plan servislerinin çalışıp veritabanını doldurması bekleniyor.</p>
-                    </div>
-                }
-                else
-                {
-                    <!-- GRAFİK BURAYA ÇİZİLECEK -->
-                    <canvas id="mainDashboardChart" height="100"></canvas>
-                }
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Arayüze Özel JS Kodları -->
-@section Scripts {
-    <!-- İleride Chart.js ve AJAX çağrılarını buraya yazacağız -->
-    <script>
-        $(document).ready(function() {
-            console.log("Ana Sayfa yüklendi, Chart.js için hazırız!");
-        });
-    </script>
-}

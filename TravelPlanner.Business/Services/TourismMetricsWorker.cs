@@ -20,19 +20,16 @@ namespace TravelPlanner.Business.Services
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("Turizm Metrikleri Servisi başlatıldı...");
 
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
                 {
-                    _logger.LogInformation("Şehir bazlı turizm verileri işleniyor...");
 
                     var cityRepo = Repository<City>.Create();
                     var tourismRepo = Repository<TourismMetric>.Create();
                     var cities = cityRepo.GetQueryable().ToList();
 
-                    // Geçmiş 2 yılın her ayı için veri kontrolü/üretimi yapıyoruz
                     DateTime startDate = DateTime.Now.AddYears(-2);
                     startDate = new DateTime(startDate.Year, startDate.Month, 1);
                     DateTime endDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
@@ -47,25 +44,20 @@ namespace TravelPlanner.Business.Services
 
                             if (!exists)
                             {
-                                // İLERİDE BURAYA: TÜİK veya Rosstat API bağlantısını HTTP Request ile yazacaksın.
-                                // Şimdilik ARIMA modelinin eğitilebilmesi için mevsime duyarlı sentetik veri atıyoruz.
 
                                 int baseTouristCount = 50000;
                                 decimal basePrice = 100m;
 
-                                // Yaz ayları (Haziran, Temmuz, Ağustos) turist sayısı patlar (Kuzey yarımküre)
                                 if (date.Month >= 6 && date.Month <= 8)
                                 {
                                     baseTouristCount = rnd.Next(150000, 300000);
                                     basePrice = rnd.Next(150, 300);
                                 }
-                                // Kış ayları (Aralık, Ocak, Şubat) özellikle Rusya (Soçi) gibi yerlerde kış turizmi etkisi
                                 else if (date.Month == 12 || date.Month <= 2)
                                 {
                                     baseTouristCount = rnd.Next(80000, 120000);
                                     basePrice = rnd.Next(120, 200);
                                 }
-                                // Bahar ayları stabil
                                 else
                                 {
                                     baseTouristCount = rnd.Next(40000, 90000);
@@ -77,23 +69,20 @@ namespace TravelPlanner.Business.Services
                                     CityId = city.Id,
                                     TouristCount = baseTouristCount,
                                     AvgAccommodationPrice = basePrice,
-                                    CurrencyUsed = "EUR", // Standartlaştırmak için EUR alıyoruz
+                                    CurrencyUsed = "EUR",
                                     DateRecorded = date,
                                     CountryId = city.CountryId
                                 });
                             }
                         }
                     }
-
-                    _logger.LogInformation("Turizm metrikleri başarıyla veritabanına işlendi.");
                 }
-                catch (Exception ex)
+                catch
                 {
-                    _logger.LogError($"Turizm verileri işlenirken hata oluştu: {ex.Message}");
                 }
 
-                // Bu servis günde bir kez çalışıp API/Veri güncellemelerini kontrol eder
-                await Task.Delay(TimeSpan.FromHours(24), stoppingToken);
+                var spn = DateTime.Now.AddDays(1).Date - DateTime.Now;
+                await Task.Delay(spn, stoppingToken);
             }
         }
     }

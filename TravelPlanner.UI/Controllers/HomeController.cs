@@ -8,15 +8,13 @@ namespace TravelPlanner.UI.Controllers
     {
         public IActionResult Index()
         {
-            // Senin yazdýðýn saðlam Repository pattern'i ile instance'larý alýyoruz
-            var countryRepo = Repository<Country>.Create();
-            var cityRepo = Repository<City>.Create();
-            var forecastRepo = Repository<Forecast>.Create();
+            var countryService = Repository<Country>.Create();
+            var cityService = Repository<City>.Create();
+            var forecastService = Repository<Forecast>.Create();
 
-            // Veritabanýnda veri yoksa patlamamasý için basit Count() iþlemleri yapýyoruz
-            ViewBag.CountryCount = countryRepo.GetQueryable().Count();
-            ViewBag.CityCount = cityRepo.GetQueryable().Count();
-            ViewBag.ForecastCount = forecastRepo.GetQueryable().Count();
+            ViewBag.CountryCount = countryService.GetQueryable().Count();
+            ViewBag.CityCount = cityService.GetQueryable().Count();
+            ViewBag.ForecastCount = forecastService.GetQueryable().Count();
 
             return View();
         }

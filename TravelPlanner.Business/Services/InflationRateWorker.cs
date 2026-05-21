@@ -25,7 +25,6 @@ namespace TravelPlanner.Business.Services
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("Enflasyon Verisi Çekme Servisi başlatıldı...");
 
             while (!stoppingToken.IsCancellationRequested)
             {
@@ -38,9 +37,6 @@ namespace TravelPlanner.Business.Services
                     List<Country> countries = countryRepo.GetList() ?? new List<Country>();
                     countries = countries.Where(c => c.Code.NullToEmpty(true) != "").ToList();
                     countries.ForEach(c => c.Code = c.Code.NullToEmpty(true).ToUpper().Replace("I", "İ"));
-
-
-                    _logger.LogInformation("Dünya Bankası üzerinden güncel enflasyon oranları çekiliyor...");
 
                     int currentYear = DateTime.Now.Year;
                     string apiUrl = $"http://api.worldbank.org/v2/country/{string.Join(";", countries.Select(x => x.Code.Substring(0, 2)).ToList())}/indicator/FP.CPI.TOTL.ZG?format=json&date={currentYear - 5}:{currentYear}";
@@ -58,12 +54,21 @@ namespace TravelPlanner.Business.Services
                             {
                                 if (record["value"] != null && record["value"].Type != JTokenType.Null)
                                 {
-                                    string countryCode = record["countryiso3code"].ToString().Substring(0, 2); // TUR -> TU (Veritabanındaki Code alanıyla eşleştirmek için)
+                                    string countryCode = "";
+                                    try
+                                    {
+                                        countryCode = record["country"]["id"].ToString();
+                                        if (countryCode.Length != 2) throw new Exception();
+                                    }
+                                    catch
+                                    {
+                                        countryCode = record["countryiso3code"].ToString().Substring(0, 2);
+                                    }
                                     decimal rate = record["value"].Value<decimal>();
                                     int year = record["date"].Value<int>();
                                     DateTime dateRecorded = new DateTime(year, 1, 1);
 
-                                    var country = countries.Where(x => x.Code.Substring(0, 2) == countryCode).FirstOrDefault();
+                                    var country = countries.Where(x => x.Code == countryCode).FirstOrDefault();
 
                                     if (country is not null)
                                     {
@@ -76,15 +81,13 @@ namespace TravelPlanner.Business.Services
                             }
                         }
                     }
-
-                    _logger.LogInformation("Enflasyon verileri başarıyla veritabanına işlendi.");
                 }
-                catch (Exception ex)
+                catch
                 {
-                    _logger.LogError($"Enflasyon verileri çekilirken hata oluştu: {ex.Message}");
                 }
 
-                await Task.Delay(TimeSpan.FromDays(7), stoppingToken);
+                var spn = DateTime.Now.AddDays(7).Date - DateTime.Now;
+                await Task.Delay(spn, stoppingToken);
             }
         }
 
