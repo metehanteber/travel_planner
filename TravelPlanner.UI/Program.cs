@@ -9,6 +9,7 @@ builder.Services.AddHostedService<ExchangeRateWorker>();
 builder.Services.AddHostedService<InflationWorker>();
 builder.Services.AddHostedService<TourismMetricsWorker>();
 builder.Services.AddHostedService<DataBuildingWorker>();
+builder.Services.AddHostedService<TourismDataWorker>();
 
 var app = builder.Build();
 

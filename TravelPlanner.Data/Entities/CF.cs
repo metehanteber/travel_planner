@@ -36,6 +36,7 @@ namespace TravelPlanner.Data.Entities
     {
         public long CountryId { get; set; }
         public string Name { get; set; } = null!;
+        public string? AdditionalData { get; set; }
 
         public Country Country { get; set; } = null!;
         public ICollection<TourismMetric> TourismMetrics { get; set; } = new List<TourismMetric>();

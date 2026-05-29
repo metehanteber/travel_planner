@@ -17,6 +17,31 @@ namespace TravelPlanner.Core
     {
         public static string NullToEmpty(this string? value, bool autoTrim = false) => value == null ? "" : autoTrim ? value.Trim() : value;
 
+        public static string AsString(this object? value, bool autoTrim = false)
+        {
+            try
+            {
+                return value.ToString().NullToEmpty(autoTrim);
+            }
+            catch
+            {
+                return "";
+            }
+        }
+
+        public static string SubstringOrFull(this string? text, int startIndex, int? length = null)
+        {
+            try
+            {
+                if (length is null || length < 1) return text.NullToEmpty().Substring(startIndex);
+                else return text.NullToEmpty(true).Substring(startIndex, length.Value);
+            }
+            catch
+            {
+                return text.NullToEmpty();
+            }
+        }
+
         public static T? Convert<T>(this object? value) where T : struct, IConvertible
         {
             try
@@ -93,6 +118,20 @@ namespace TravelPlanner.Core
                 if (value is null) return default;
                 if (!(value is T)) return default;
                 return (T)value;
+            }
+            catch
+            {
+                return default;
+            }
+        }
+
+        public static T2? GetValueOrDefault<T1, T2>(this Dictionary<T1, T2> dict, T1 key)
+        {
+            try
+            {
+                if (dict is null || dict.Count < 1) return default;
+                if (!dict.ContainsKey(key)) return default;
+                return dict[key];
             }
             catch
             {

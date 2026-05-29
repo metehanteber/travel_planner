@@ -38,6 +38,8 @@ namespace TravelPlanner.Business.Repo
         public int DeleteList(List<T> entities);
 
         public int DeleteList(List<long> ids);
+
+        public int SaveChanges();
     }
 
 
@@ -168,6 +170,9 @@ namespace TravelPlanner.Business.Repo
             return Context.Set<T>().Include(preg);
         }
 
-
+        public int SaveChanges()
+        {
+            return Context.SaveChanges();
+        }
     }
 }
