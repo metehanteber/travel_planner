@@ -23,17 +23,16 @@ namespace TravelPlanner.Business.Services
             {
                 try
                 {
-                    System.Threading.Thread.Sleep(10000);
                     string scriptPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "main.py");
 
                     var startInfo = new ProcessStartInfo
                     {
                         FileName = "python",
                         Arguments = "\"" + scriptPath + "\"",
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
+                        RedirectStandardOutput = false,
+                        RedirectStandardError = false,
+                        UseShellExecute = true,
+                        CreateNoWindow = false
                     };
 
                     using (var process = Process.Start(startInfo))

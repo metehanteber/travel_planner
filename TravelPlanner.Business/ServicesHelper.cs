@@ -91,6 +91,24 @@ namespace TravelPlanner.Business
                 }
 
             }
+            Random rnd = new Random();
+            var tcc = model.Where(x => x.TouristCount.HasValue && x.TouristCount.Value > 0).Select(x => (decimal)x.TouristCount.Value).ToList();
+            var app = model.Where(x => x.AccomodationPrices.HasValue && x.AccomodationPrices.Value > 0).Select(x => x.AccomodationPrices.Value).ToList();
+            decimal tc_mid = tcc.Sum() / tcc.Count;
+            decimal ap_mid = app.Sum() / app.Count;
+            for (int i = 0; i < model.Count; i++)
+            {
+                if (!model[i].TouristCount.HasValue || model[i].TouristCount.Value < 1)
+                {
+                    var t = 1.0m - (((decimal)rnd.NextDouble() - 0.5m) * 0.3m);
+                    model[i].TouristCount = (int)(tc_mid * t);
+                }
+                if (!model[i].AccomodationPrices.HasValue || model[i].AccomodationPrices.Value < 1)
+                {
+                    var t = 1.0m - (((decimal)rnd.NextDouble() - 0.5m) * 0.3m);
+                    model[i].AccomodationPrices = (int)(ap_mid * t);
+                }
+            }
             return model;
         }
 

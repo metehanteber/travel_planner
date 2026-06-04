@@ -86,7 +86,6 @@ def process_city_metrics(city_id, country_id, metric_type, months_to_predict=6):
     for i in range(months_to_predict):
         forecast_date = last_date + relativedelta(months=i+1)
         
-        # Yapay zeka çýktýsýný güvene alýyoruz (NaN Kontrolü)
         raw_pred = final_forecast[i]
         if pd.isna(raw_pred):
             pred_value = 0
@@ -124,7 +123,6 @@ def process_country_metrics(country_id, metric_type, steps_to_predict=6):
         else:
             forecast_date = last_date + relativedelta(months=i+1)
             
-        # Yapay zeka çýktýsýný güvene alýyoruz (NaN Kontrolü)
         raw_pred = final_forecast[i]
         if pd.isna(raw_pred):
             pred_value = 0.01 if metric_type == "ExchangeRate" else 0
