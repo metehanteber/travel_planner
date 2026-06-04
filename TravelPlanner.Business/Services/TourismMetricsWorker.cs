@@ -20,7 +20,7 @@ namespace TravelPlanner.Business.Services
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-
+            return;
             while (!stoppingToken.IsCancellationRequested)
             {
                 try

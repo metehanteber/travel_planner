@@ -384,7 +384,7 @@ namespace TravelPlanner.Business
 
                     if (apiId == "") continue;
 
-                    if (!dict.ContainsKey(city.Name)) dict.Add(city.Name, new Dictionary<string, int>());
+                    if (!dict.ContainsKey(apiId)) dict.Add(apiId, new Dictionary<string, int>());
 
                     ApiRequest request = new ApiRequest
                     {
@@ -402,11 +402,11 @@ namespace TravelPlanner.Business
                         var date = (DateTime)Convert.ToDateTime(Convert.ToString(data[i]["Fecha"])).Date;
                         var value = (int)Convert.ToInt32(Convert.ToString(data[i]["Valor"]));
                         string key = date.ToString("yyyy") + "M" + date.ToString("MM");
-                        if (!dict[city.Name].ContainsKey(key))
+                        if (!dict[apiId].ContainsKey(key))
                         {
-                            dict[city.Name].Add(key, value);
+                            dict[apiId].Add(key, value);
                         }
-                        else dict[city.Name][key] = value;
+                        else dict[apiId][key] = value;
 
                     }
                 }
@@ -428,7 +428,7 @@ namespace TravelPlanner.Business
 
                     if (apiId == "") continue;
 
-                    if (!dict.ContainsKey(city.Name)) dict.Add(city.Name, new Dictionary<string, decimal>());
+                    if (!dict.ContainsKey(apiId)) dict.Add(apiId, new Dictionary<string, decimal>());
 
                     ApiRequest request = new ApiRequest
                     {
@@ -446,11 +446,11 @@ namespace TravelPlanner.Business
                         var date = (DateTime)Convert.ToDateTime(Convert.ToString(data[i]["Fecha"])).Date;
                         var value = (decimal)Convert.ToDecimal(Convert.ToString(data[i]["Valor"]));
                         string key = date.ToString("yyyy") + "M" + date.ToString("MM");
-                        if (!dict[city.Name].ContainsKey(key))
+                        if (!dict[apiId].ContainsKey(key))
                         {
-                            dict[city.Name].Add(key, value);
+                            dict[apiId].Add(key, value);
                         }
-                        else dict[city.Name][key] = value;
+                        else dict[apiId][key] = value;
 
                     }
                 }

@@ -26,7 +26,6 @@ engine = create_engine(f'postgresql+psycopg2://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB
 
 
 def create_lstm_dataset(dataset, look_back=3):
-    """LSTM modeli icin veriyi pencerelere (window) boler."""
     X, Y = [], []
     for i in range(len(dataset) - look_back):
         a = dataset[i:(i + look_back), 0]
@@ -35,7 +34,6 @@ def create_lstm_dataset(dataset, look_back=3):
     return np.array(X), np.array(Y)
 
 def run_ai_engine(ts_data, months_to_predict):
-    """Saf ARIMA+LSTM Hibrit tahmin motoru. Veriyi alir, tahmini doner."""
     arima_model = ARIMA(ts_data, order=(5, 1, 0)) 
     arima_fit = arima_model.fit()
     
@@ -87,8 +85,14 @@ def process_city_metrics(city_id, country_id, metric_type, months_to_predict=6):
     
     for i in range(months_to_predict):
         forecast_date = last_date + relativedelta(months=i+1)
-        pred_value = round(final_forecast[i], 2)
-        if pred_value < 0: pred_value = 0
+        
+        # Yapay zeka çýktýsýný güvene alýyoruz (NaN Kontrolü)
+        raw_pred = final_forecast[i]
+        if pd.isna(raw_pred):
+            pred_value = 0
+        else:
+            pred_value = round(raw_pred, 2)
+            if pred_value < 0: pred_value = 0
             
         insert_q = f"""
             INSERT INTO forecasts (country_id, city_id, metric_type, forecast_date, predicted_value, model_used, created_at, guid, is_deleted)
@@ -120,9 +124,14 @@ def process_country_metrics(country_id, metric_type, steps_to_predict=6):
         else:
             forecast_date = last_date + relativedelta(months=i+1)
             
-        pred_value = round(final_forecast[i], 2)
-        if metric_type == "ExchangeRate" and pred_value < 0: 
-            pred_value = 0.01 
+        # Yapay zeka çýktýsýný güvene alýyoruz (NaN Kontrolü)
+        raw_pred = final_forecast[i]
+        if pd.isna(raw_pred):
+            pred_value = 0.01 if metric_type == "ExchangeRate" else 0
+        else:
+            pred_value = round(raw_pred, 2)
+            if metric_type == "ExchangeRate" and pred_value < 0: 
+                pred_value = 0.01 
 
         insert_q = f"""
             INSERT INTO forecasts (country_id, city_id, metric_type, forecast_date, predicted_value, model_used, created_at, guid, is_deleted)

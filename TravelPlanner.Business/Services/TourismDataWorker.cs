@@ -34,6 +34,7 @@ namespace TravelPlanner.Business.Services
                     ServicesHelper.ProcessNorwayTourismMetrics(ref tourismMetricsRepo);
                     ServicesHelper.ProcessSpainTourismMetrics(ref tourismMetricsRepo);
                     ServicesHelper.ProcessTurkeyTourismMetrics(ref tourismMetricsRepo);
+                    ServicesHelper.ProcessRussiaTourismMetrics(ref tourismMetricsRepo);
                 }
                 catch
                 {
