@@ -10,6 +10,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using TravelPlanner.Business.Repo;
 using TravelPlanner.Core;
+using TravelPlanner.Data;
 using TravelPlanner.Data.Entities;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -251,20 +252,20 @@ namespace TravelPlanner.Business
                         code = "Region",
                         selection = new {
                             filter = "item",
-                            values = new string[] { code } // Örn: "03"
+                            values = new string[] { code }
                         }
                     },
                     new {
                         code = "ContentsCode",
                         selection = new {
                             filter = "item",
-                            values = new string[] { "PrisRom" } // Oda başına ortalama fiyat (NOK cinsinden)
+                            values = new string[] { "PrisRom" }
                         }
                     }
                 },
                         response = new { format = "json-stat2" }
                     },
-                    Url = "https://data.ssb.no/api/v0/en/table/14168/" // Fiyat tablosu
+                    Url = "https://data.ssb.no/api/v0/en/table/14168/"
                 };
 
                 var jsonResponse = request.SendAndReceiveRawResponse().NullToEmpty(true);
@@ -464,23 +465,15 @@ namespace TravelPlanner.Business
         #endregion Spain Info
 
         #region Turkey Info
-
         public static void ProcessTurkeyTourismMetrics(ref IRepository<TourismMetric> repository)
         {
+            var file = new FileInfo("country_data\\tr.json");
+            if (!file.Exists) return;
+            var list = JsonConvert.DeserializeObject<List<TourismMetricsModel>>(File.ReadAllText(file.FullName, Encoding.UTF8)) ?? new List<TourismMetricsModel>();
             IRepository<City> citiesRepo = Repository<City>.Create();
             var cities = citiesRepo.GetQueryable(x => x.Country.Code == "TR").ToList();
-
-            // TR10 (İstanbul), TR61 (Antalya) gibi kodlar
-            var tCodes = cities.Select(x => x.AdditionalData.NullToEmpty(true).Split([" "], StringSplitOptions.RemoveEmptyEntries).FirstOrDefault().NullToEmpty(true)).Where(x => x != "").Distinct().OrderBy(x => x).ToList();
-            var aCodes = cities.Select(x => x.AdditionalData.NullToEmpty(true).Split([" "], StringSplitOptions.RemoveEmptyEntries).LastOrDefault().NullToEmpty(true)).Where(x => x != "").Distinct().OrderBy(x => x).ToList();
-
-            var touristCount = ProcessTurkeyTouristCount(tCodes);
-            var accomodationPrices = ProcessTurkeyAccommodationPrice(aCodes);
-
             var cityIds = cities.Select(x => x.Id).ToList();
             var metrics = repository.GetQueryable(x => cityIds.Contains(x.CityId)).ToList();
-
-            var list = ConcatTurkeyInfo(cities, touristCount, accomodationPrices);
 
             bool updated = false;
             List<TourismMetric> addeds = new List<TourismMetric>();
@@ -497,7 +490,7 @@ namespace TravelPlanner.Business
                         TouristCount = item.TouristCount,
                         CityId = item.CityId,
                         CountryId = item.CountryId,
-                        CurrencyUsed = "EUR",
+                        CurrencyUsed = "TRY",
                         Guid = Guid.NewGuid(),
                         IsDeleted = false
                     });
@@ -526,192 +519,64 @@ namespace TravelPlanner.Business
                 repository.InsertList(addeds);
             }
         }
-
-        // ConcatTurkeyInfo metodu Norveç ve İspanya'daki Concat metodlarıyla tamamen aynı mantıkta kalabilir.
-        private static List<TourismMetricsModel> ConcatTurkeyInfo(List<City> cities, Dictionary<string, Dictionary<string, int>> touristCount, Dictionary<string, Dictionary<string, decimal>> accomodationPrice)
-        {
-            List<TourismMetricsModel> model = new List<TourismMetricsModel>();
-
-            foreach (var city in cities)
-            {
-                var cKeys = city.AdditionalData.NullToEmpty(true).Split([" "], StringSplitOptions.RemoveEmptyEntries).ToList();
-                if (cKeys is null || cKeys.Count < 1) continue;
-
-                if (touristCount.ContainsKey(cKeys.First()))
-                {
-                    var data = touristCount[cKeys.First()];
-                    if (data is null || data.Count < 1) continue;
-                    foreach (var item in data)
-                    {
-                        var dateInfo = item.Key.NullToEmpty(true).Split(['-'], StringSplitOptions.RemoveEmptyEntries).Select(x => x.Convert<int>()).Where(x => x.HasValue).Select(x => x.Value).ToList();
-                        if (dateInfo is null || dateInfo.Count != 2) continue;
-                        var date = new DateTime(dateInfo[0], dateInfo[1], 1);
-                        var metric = model.Where(x => x.CityId == city.Id && x.Date == date).FirstOrDefault();
-                        if (metric is null)
-                        {
-                            metric = new TourismMetricsModel
-                            {
-                                CityId = city.Id,
-                                Date = date,
-                                TouristCount = item.Value,
-                                CountryId = city.CountryId
-                            };
-                            model.Add(metric);
-                        }
-                        else
-                        {
-                            if (item.Value > 0) metric.TouristCount = item.Value;
-                        }
-                    }
-                }
-
-                if (accomodationPrice.ContainsKey(cKeys.Last()))
-                {
-                    var data = accomodationPrice[cKeys.Last()];
-                    if (data is null || data.Count < 1) continue;
-                    foreach (var item in data)
-                    {
-                        var dateInfo = item.Key.NullToEmpty(true).Split(['-'], StringSplitOptions.RemoveEmptyEntries).Select(x => x.Convert<int>()).Where(x => x.HasValue).Select(x => x.Value).ToList();
-                        if (dateInfo is null || dateInfo.Count != 2) continue;
-                        var date = new DateTime(dateInfo[0], dateInfo[1], 1);
-                        var metric = model.Where(x => x.CityId == city.Id && x.Date == date).FirstOrDefault();
-                        if (metric is null)
-                        {
-                            metric = new TourismMetricsModel
-                            {
-                                CityId = city.Id,
-                                Date = date,
-                                AccomodationPrices = item.Value,
-                                CountryId = city.CountryId
-                            };
-                            model.Add(metric);
-                        }
-                        else
-                        {
-                            if (item.Value > 0) metric.AccomodationPrices = item.Value;
-                        }
-                    }
-                }
-            }
-            return model;
-        }
-
-        private static Dictionary<string, Dictionary<string, int>> ProcessTurkeyTouristCount(List<string> codes)
-        {
-            var dict = new Dictionary<string, Dictionary<string, int>>();
-
-            // Türkiye (TR10, TR61 vb.) verilerini API olarak sunan tek güvenilir kaynak Eurostat'tır.
-            // unit=NR (Sayı), nace_r2=I551-I553 (Konaklama tesisleri), lastTimePeriod=24 (Son 24 Ay)
-            foreach (var code in codes)
-            {
-                var request = new ApiRequest
-                {
-                    Method = "GET",
-                    ContentType = "application/json;charset=utf-8",
-                    Url = $"https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/tour_occ_nim?format=JSON&unit=NR&c_resid=TOTAL&nace_r2=I551-I553&geo={code}&lastTimePeriod=24"
-                };
-
-                var jsonResponse = request.SendAndReceiveRawResponse().NullToEmpty(true);
-
-                if (jsonResponse == "") continue;
-
-                using JsonDocument doc = JsonDocument.Parse(jsonResponse);
-                JsonElement root = doc.RootElement;
-
-                if (root.TryGetProperty("error", out JsonElement errorElement)) continue;
-
-                // Eurostat JSON-stat mimarisini senin efsanevi LINQ pipeline'ına sokuyoruz
-                if (!root.TryGetProperty("dimension", out JsonElement dimensionElement) ||
-                    !dimensionElement.TryGetProperty("time", out JsonElement timeElement))
-                    continue;
-
-                JsonElement tidIndexElement = timeElement
-                    .GetProperty("category")
-                    .GetProperty("index");
-
-                JsonElement valuesElement = root.GetProperty("value");
-
-                dict.Add(code, tidIndexElement
-                    .EnumerateObject()
-                    .Select(x => new
-                    {
-                        Month = x.Name, // Eurostat'ta bu "2024-01" formatında gelir
-                        Index = x.Value.GetInt32()
-                    })
-                    .OrderBy(x => x.Index)
-                    .ToDictionary(
-                        x => x.Month,
-                        x =>
-                        {
-                            try
-                            {
-                                // Eurostat değerleri objenin içinde "0": 15400, "1": 16200 şeklinde tutar
-                                if (valuesElement.TryGetProperty(x.Index.ToString(), out JsonElement val))
-                                {
-                                    return val.GetInt32();
-                                }
-                                return 0;
-                            }
-                            catch
-                            {
-                                return 0;
-                            }
-                        }
-                    ));
-            }
-
-            return dict;
-        }
-
-        private static Dictionary<string, Dictionary<string, decimal>> ProcessTurkeyAccommodationPrice(List<string> codes)
-        {
-            var dict = new Dictionary<string, Dictionary<string, decimal>>();
-
-            // CSV üzerinden fiyatları parse eden yapı (Senin sunucunda veya GitHub'da duran fiyat listesi)
-            string csvUrl = "https://raw.githubusercontent.com/senin-hesabın/datasets/main/turkey_hotel_prices.csv";
-
-            try
-            {
-                var request = new ApiRequest { Method = "GET", Url = csvUrl };
-                var csvData = request.SendAndReceiveRawResponse().NullToEmpty(true);
-
-                if (csvData != "")
-                {
-                    var lines = csvData.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries).Skip(1).ToList();
-
-                    foreach (var code in codes)
-                    {
-                        var regionData = new Dictionary<string, decimal>();
-
-                        foreach (var line in lines)
-                        {
-                            var columns = line.Split([',', ';'], StringSplitOptions.RemoveEmptyEntries);
-                            if (columns.Length >= 3)
-                            {
-                                string regionCode = columns[0].NullToEmpty(true);
-                                string dateStr = columns[1].NullToEmpty(true); // "2024-01"
-                                string priceStr = columns[2].NullToEmpty(true);
-
-                                if (regionCode == code)
-                                {
-                                    if (decimal.TryParse(priceStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal price))
-                                    {
-                                        if (!regionData.ContainsKey(dateStr)) regionData.Add(dateStr, price);
-                                    }
-                                }
-                            }
-                        }
-
-                        if (regionData.Count > 0) dict.Add(code, regionData);
-                    }
-                }
-            }
-            catch { }
-
-            return dict;
-        }
-
         #endregion Turkey Info
+
+        #region Russia Info
+        public static void ProcessRussiaTourismMetrics(ref IRepository<TourismMetric> repository)
+        {
+            var file = new FileInfo("country_data\\ru.json");
+            if (!file.Exists) return;
+            var list = JsonConvert.DeserializeObject<List<TourismMetricsModel>>(File.ReadAllText(file.FullName, Encoding.UTF8)) ?? new List<TourismMetricsModel>();
+            IRepository<City> citiesRepo = Repository<City>.Create();
+            var cities = citiesRepo.GetQueryable(x => x.Country.Code == "RU").ToList();
+            var cityIds = cities.Select(x => x.Id).ToList();
+            var metrics = repository.GetQueryable(x => cityIds.Contains(x.CityId)).ToList();
+
+            bool updated = false;
+            List<TourismMetric> addeds = new List<TourismMetric>();
+
+            foreach (var item in list)
+            {
+                var metric = metrics.Where(x => x.DateRecorded == item.Date && x.CityId == item.CityId).FirstOrDefault();
+                if (metric is null)
+                {
+                    addeds.Add(new TourismMetric
+                    {
+                        DateRecorded = item.Date,
+                        AvgAccommodationPrice = item.AccomodationPrices,
+                        TouristCount = item.TouristCount,
+                        CityId = item.CityId,
+                        CountryId = item.CountryId,
+                        CurrencyUsed = "RUB",
+                        Guid = Guid.NewGuid(),
+                        IsDeleted = false
+                    });
+                }
+                else
+                {
+                    if (!metric.TouristCount.HasValue || (item.TouristCount.HasValue && item.TouristCount.Value > 0))
+                    {
+                        metric.TouristCount = item.TouristCount;
+                        updated = true;
+                    }
+                    if (!metric.AvgAccommodationPrice.HasValue || (item.AccomodationPrices.HasValue && item.AccomodationPrices.Value > 0))
+                    {
+                        metric.AvgAccommodationPrice = item.AccomodationPrices;
+                        updated = true;
+                    }
+                }
+            }
+
+            if (updated)
+            {
+                repository.SaveChanges();
+            }
+            if (addeds.Count > 0)
+            {
+                repository.InsertList(addeds);
+            }
+        }
+        #endregion Russia Info
 
     }
 

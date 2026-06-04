@@ -23,6 +23,7 @@ namespace TravelPlanner.Business.Services
             {
                 try
                 {
+                    System.Threading.Thread.Sleep(10000);
                     string scriptPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "main.py");
 
                     var startInfo = new ProcessStartInfo

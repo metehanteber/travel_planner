@@ -2,6 +2,10 @@
 @{
     var _layoutData = UIHelper.GetLayoutData();
     var colors = UIHelper.GetUIColors();
+
+    string mainTitle = ViewData["Title"] is null ? "" : ((string)(ViewData["Title"] ?? "")).Trim();
+    if (mainTitle != "") mainTitle += " | ";
+    mainTitle += "Seyahat Asistanı";
 }
 
 <!DOCTYPE html>
@@ -9,7 +13,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Seyahat Asistanı</title>
+    <title>@mainTitle</title>
 
     <link type="text/css" href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
@@ -51,7 +55,10 @@
 
                                     <li>
                                         <a class="dropdown-item" href="/country/@country.Code.ToLower().Replace("ı", "i")">
-                                            <i class="fa-solid fa-location-dot me-2" style="color: @colors[i % colors.Length];"></i>@country.Name
+                                            <img src="/images/flags/@(country.Code.ToLower()).jpg"
+                                                 alt="@country.Name Bayrağı"
+                                                 class="me-3 rounded shadow-sm"
+                                                 style="height: 12px; width: auto; object-fit: cover;" />@country.Name
                                         </a>
                                     </li>
                                 }

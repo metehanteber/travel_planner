@@ -110,5 +110,42 @@ namespace TravelPlanner.UI.Helpers
         {
             return ["#32a852", "#a2a832", "#a83832", "#3279a8", "#878787", "#111111", "#FEFEFE"];
         }
+
+        public static Dictionary<string, long> GetCountryPopulation(string code)
+        {
+            var dict = new Dictionary<string, long>();
+            try
+            {
+                int currentYear = DateTime.Now.Year;
+                string url = $"https://api.worldbank.org/v2/country/{code}/indicator/SP.POP.TOTL?format=json";
+
+                using var client = new HttpClient();
+                var response = client.GetStringAsync(url).Result;
+
+                using System.Text.Json.JsonDocument doc = System.Text.Json.JsonDocument.Parse(response);
+                var root = doc.RootElement;
+
+                if (root.ValueKind == System.Text.Json.JsonValueKind.Array && root.GetArrayLength() > 1)
+                {
+                    var dataArray = root[1];
+                    foreach (var item in dataArray.EnumerateArray())
+                    {
+                        string year = item.GetProperty("date").GetString().NullToEmpty(true);
+                        var valProp = item.GetProperty("value");
+
+                        if (valProp.ValueKind != System.Text.Json.JsonValueKind.Null)
+                        {
+                            long pop = valProp.GetInt64();
+                            dict[year] = pop;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+            }
+
+            return dict.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Value);
+        }
     }
 }
