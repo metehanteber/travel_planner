@@ -112,6 +112,43 @@ namespace TravelPlanner.Business
             return model;
         }
 
+        public static Dictionary<string, long> GetCountryPopulation(string code)
+        {
+            var dict = new Dictionary<string, long>();
+            try
+            {
+                int currentYear = DateTime.Now.Year;
+                string url = $"https://api.worldbank.org/v2/country/{code}/indicator/SP.POP.TOTL?format=json&date={currentYear - 10}:{currentYear}";
+
+                using var client = new System.Net.Http.HttpClient();
+                var response = client.GetStringAsync(url).Result;
+
+                using System.Text.Json.JsonDocument doc = System.Text.Json.JsonDocument.Parse(response);
+                var root = doc.RootElement;
+
+                if (root.ValueKind == System.Text.Json.JsonValueKind.Array && root.GetArrayLength() > 1)
+                {
+                    var dataArray = root[1];
+                    foreach (var item in dataArray.EnumerateArray())
+                    {
+                        string year = item.GetProperty("date").GetString().NullToEmpty(true);
+                        var valProp = item.GetProperty("value");
+
+                        if (valProp.ValueKind != System.Text.Json.JsonValueKind.Null)
+                        {
+                            long pop = valProp.GetInt64();
+                            dict[year] = pop;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+            }
+
+            return dict.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Value);
+        }
+
         #endregion Common
 
         #region Norway Info

@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Linq;
+using System.Collections.Generic;
 using TravelPlanner.Business.Repo;
-using TravelPlanner.Core;
 using TravelPlanner.Data.Entities;
-using TravelPlanner.UI.Helpers;
 
 namespace TravelPlanner.Web.UI.Controllers
 {
@@ -31,17 +31,39 @@ namespace TravelPlanner.Web.UI.Controllers
                 .Select(g => g.OrderByDescending(m => m.DateRecorded).FirstOrDefault())
                 .ToDictionary(x => x.CityId, x => x);
 
-            var populationData = UIHelper.GetCountryPopulation(country.Code);
+            var populationData = TravelPlanner.Business.ServicesHelper.GetCountryPopulation(country.Code);
 
-            var latestExchange = exRepo.GetQueryable(x => x.CountryId == country.Id)
+            var exchangeRates = exRepo.GetQueryable(x => x.CountryId == country.Id)
                                        .OrderByDescending(x => x.DateRecorded)
-                                       .FirstOrDefault();
+                                       .Take(2)
+                                       .ToList();
 
-            ViewBag.LatestExchangeRate = latestExchange != null ? Math.Round(latestExchange.Rate, 2) : 1;
-            ViewBag.Currency = latestExchange != null ? latestExchange.TargetCurrency : "EUR";
+            string exchangeInsight = "Güncel kur verisi analiz ediliyor.";
+            if (exchangeRates.Count == 2)
+            {
+                var currentRate = exchangeRates[0].Rate;
+                var previousRate = exchangeRates[1].Rate;
+
+                if (currentRate > previousRate)
+                {
+                    exchangeInsight = $"Kur trendi yukarı yönlü. Yerel para birimi EUR karşısında değer kaybediyor. ({(currentRate - previousRate):N2} artış)";
+                }
+                else if (currentRate < previousRate)
+                {
+                    exchangeInsight = $"Kur trendi aşağı yönlü. Yerel para birimi EUR karşısında değer kazanıyor. ({(previousRate - currentRate):N2} düşüş)";
+                }
+                else
+                {
+                    exchangeInsight = "Döviz kuru stabil seyrediyor.";
+                }
+            }
+
+            ViewBag.LatestExchangeRate = exchangeRates.FirstOrDefault()?.Rate ?? 1;
+            ViewBag.Currency = exchangeRates.FirstOrDefault()?.TargetCurrency ?? "EUR";
             ViewBag.Cities = cities;
             ViewBag.LatestMetrics = latestMetrics;
             ViewBag.PopulationData = populationData;
+            ViewBag.ExchangeInsight = exchangeInsight;
 
             return View(country);
         }
@@ -64,39 +86,57 @@ namespace TravelPlanner.Web.UI.Controllers
                 .OrderByDescending(x => x.DateRecorded)
                 .ToList();
 
-            var futureMetrics = forecastRepo.GetQueryable(x => x.CityId == id)
+            var rawForecasts = forecastRepo.GetQueryable(x => x.CityId == id)
                 .Where(x => x.ForecastDate >= currentMonth)
-                .OrderBy(x => x.ForecastDate)
                 .ToList();
 
-            var forecastMetrics = new List<TourismMetric>();
-
-            var dates = futureMetrics.Select(x => x.ForecastDate).Distinct().ToList();
-
-            foreach (var date in dates)
-            {
-                var m = futureMetrics.Where(x => x.ForecastDate == date).ToList();
-                var tc = m.Where(x => x.MetricType == "TouristCount").OrderByDescending(x => x.Id).FirstOrDefault();
-                var ap = m.Where(x => x.MetricType == "AccommodationPrice").OrderByDescending(x => x.Id).FirstOrDefault();
-
-                forecastMetrics.Add(new TourismMetric
+            var futureMetrics = rawForecasts
+                .GroupBy(x => x.ForecastDate)
+                .Select(g => new TourismMetric
                 {
-                    Id = 0,
-                    AvgAccommodationPrice = ap is null ? null : ap.PredictedValue,
-                    TouristCount = tc is null ? null : tc.PredictedValue.Convert<int>(),
-                    CityId = city.Id,
-                    CountryId = city.CountryId,
-                    CurrencyUsed = city.Country is null ? "EUR" : city.Country.ExchangeCode.NullToEmpty(true),
-                    DateRecorded = date,
-                    Guid = Guid.NewGuid(),
-                    IsDeleted = false
-                });
+                    DateRecorded = g.Key,
+                    TouristCount = (int?)(g.FirstOrDefault(x => x.MetricType == "TouristCount")?.PredictedValue),
+                    AvgAccommodationPrice = (decimal?)(g.FirstOrDefault(x => x.MetricType == "AccommodationPrice")?.PredictedValue),
+                    CurrencyUsed = "EUR"
+                })
+                .OrderBy(x => x.DateRecorded)
+                .ToList();
 
+            string touristInsight = "Turist hacmi için yeterli tahmin verisi bekleniyor.";
+            string priceInsight = "Konaklama fiyatları için yeterli tahmin verisi bekleniyor.";
+
+            if (historicalMetrics.Any() && futureMetrics.Any())
+            {
+                var lastHistTourist = historicalMetrics.First().TouristCount ?? 0;
+                var avgFutureTourist = futureMetrics.Average(x => x.TouristCount) ?? 0;
+
+                if (avgFutureTourist > lastHistTourist)
+                {
+                    touristInsight = $"Yapay zeka modelimize göre önümüzdeki dönemde turist yoğunluğunda artış beklenmektedir. Ortalama beklenti: {avgFutureTourist:N0} kişi.";
+                }
+                else
+                {
+                    touristInsight = $"Yapay zeka modelimize göre önümüzdeki dönemde turist yoğunluğunda sakinleşme veya düşüş beklenmektedir. Ortalama beklenti: {avgFutureTourist:N0} kişi.";
+                }
+
+                var lastHistPrice = historicalMetrics.First().AvgAccommodationPrice ?? 0;
+                var avgFuturePrice = futureMetrics.Average(x => x.AvgAccommodationPrice) ?? 0;
+
+                if (avgFuturePrice > lastHistPrice)
+                {
+                    priceInsight = $"Artan talebe bağlı olarak konaklama maliyetlerinde yükseliş trendi öngörülüyor. Hedef ortalama: {avgFuturePrice:N2}";
+                }
+                else
+                {
+                    priceInsight = $"Konaklama maliyetlerinde düşüş trendi veya stabilite öngörülüyor. Fiyat/performans dönemi yaklaşıyor.";
+                }
             }
 
             ViewBag.Country = countryRepo.GetQueryable(x => x.Id == city.CountryId).FirstOrDefault();
             ViewBag.HistoricalMetrics = historicalMetrics;
-            ViewBag.FutureMetrics = forecastMetrics;
+            ViewBag.FutureMetrics = futureMetrics;
+            ViewBag.TouristInsight = touristInsight;
+            ViewBag.PriceInsight = priceInsight;
 
             return View(city);
         }

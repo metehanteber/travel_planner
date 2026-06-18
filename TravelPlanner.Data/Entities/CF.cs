@@ -25,6 +25,7 @@ namespace TravelPlanner.Data.Entities
         public string Name { get; set; } = null!;
         public string Code { get; set; } = null!;
         public string? ExchangeCode { get; set; }
+        public string? AboutContent { get; set; }
 
         public ICollection<City> Cities { get; set; } = new List<City>();
         public ICollection<ExchangeRate> ExchangeRates { get; set; } = new List<ExchangeRate>();
@@ -37,6 +38,7 @@ namespace TravelPlanner.Data.Entities
         public long CountryId { get; set; }
         public string Name { get; set; } = null!;
         public string? AdditionalData { get; set; }
+        public string? AboutContent { get; set; }
 
         public Country Country { get; set; } = null!;
         public ICollection<TourismMetric> TourismMetrics { get; set; } = new List<TourismMetric>();

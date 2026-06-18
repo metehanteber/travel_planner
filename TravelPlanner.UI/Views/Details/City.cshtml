@@ -13,186 +13,262 @@
     var futureMetrics = ViewBag.FutureMetrics as List<TravelPlanner.Data.Entities.TourismMetric> ?? new List<TravelPlanner.Data.Entities.TourismMetric>();
 }
 
-<div class="container mt-4 mb-5">
-    <nav aria-label="breadcrumb" class="mb-4">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/">Ana Sayfa</a></li>
-            @if (country != null)
-            {
-                <li class="breadcrumb-item"><a href="/country/@country.Code.ToLower()">@country.Name</a></li>
-            }
-            <li class="breadcrumb-item active" aria-current="page">@Model.Name</li>
-        </ol>
-    </nav>
-
-    <div class="d-flex justify-content-between align-items-end mb-4">
-        <div>
-            <h1 class="display-5 fw-bold mb-0">
+<div class="bg-dark py-4 mb-4" style="background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%);">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-2">
+                <li class="breadcrumb-item"><a href="/" class="text-white-50 text-decoration-none">Ana Sayfa</a></li>
+                @if (country != null)
+                {
+                    <li class="breadcrumb-item"><a href="/country/@country.Code.ToLower()" class="text-white-50 text-decoration-none">@country.Name</a></li>
+                }
+                <li class="breadcrumb-item active text-white" aria-current="page">@Model.Name</li>
+            </ol>
+        </nav>
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="display-5 fw-bold text-white mb-0 d-flex align-items-center">
                 @if (country is not null)
                 {
                     <img src="/images/flags/@(country.Code.ToLower()).jpg"
-                         alt="@country.Name Bayrağı"
-                         class="me-3 rounded shadow-sm"
-                         style="height: 1.2em; width: auto; object-fit: cover;" />
+                         class="me-3 rounded shadow"
+                         style="height: 1em; width: auto; object-fit: cover; border: 2px solid rgba(255,255,255,0.5);" />
                 }
                 else
                 {
-                    <i class="fa-solid fa-city me-2 text-secondary"></i>
+                    <i class="fa-solid fa-map-pin me-3 text-white-50"></i>
                 }
                 @Model.Name
             </h1>
-            <p class="text-muted mt-2">Turizm hacmi ve ortalama konaklama fiyatları.</p>
+            <a href="/country/@country?.Code.ToLower()" class="btn btn-outline-light rounded-pill px-4">
+                <i class="fa-solid fa-arrow-left me-2"></i> Ülkeye Dön
+            </a>
         </div>
-        <a href="/country/@country?.Code.ToLower()" class="btn btn-secondary shadow-sm">
-            <i class="fa-solid fa-arrow-left me-1"></i> Ülkeye Dön
-        </a>
-    </div>
-
-    <ul class="nav nav-tabs" id="metricTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active fw-bold px-4" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab" aria-controls="history" aria-selected="true">
-                <i class="fa-solid fa-clock-rotate-left me-1"></i> Geçmiş Veriler
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link fw-bold px-4 text-success" id="future-tab" data-bs-toggle="tab" data-bs-target="#future" type="button" role="tab" aria-controls="future" aria-selected="false">
-                <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Gelecek Tahminleri
-            </button>
-        </li>
-    </ul>
-
-    <div class="tab-content border-start border-end border-bottom bg-white p-4 rounded-bottom shadow-sm" id="metricTabsContent">
-
-        <div class="tab-pane fade show active" id="history" role="tabpanel" aria-labelledby="history-tab">
-            <div class="row">
-                <div class="col-12 mb-4">
-                    <h5 class="mb-3 text-primary"><i class="fa-solid fa-chart-line me-2"></i> Gerçekleşen Turist ve Fiyat Grafiği</h5>
-                    <div style="height: 300px;">
-                        <canvas id="historyChart"></canvas>
-                    </div>
-                </div>
-                <div class="col-12">
-                    <div class="table-responsive">
-                        <table class="table table-hover table-striped align-middle border">
-                            <thead class="table-light">
-                                <tr>
-                                    <th class="ps-3">Tarih</th>
-                                    <th class="text-end">Turist Sayısı</th>
-                                    <th class="text-end pe-3">Ort. Konaklama</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var metric in historicalMetrics)
-                                {
-                                    <tr>
-                                        <td class="ps-3 fw-bold">@metric.DateRecorded.ToString("MMMM yyyy")</td>
-                                        <td class="text-end"><span class="badge bg-primary rounded-pill fs-6">@(metric.TouristCount?.ToString("N0") ?? "-")</span></td>
-                                        <td class="text-end pe-3 fw-bold text-danger">@(metric.AvgAccommodationPrice?.ToString("N2") ?? "-") @metric.CurrencyUsed</td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="tab-pane fade" id="future" role="tabpanel" aria-labelledby="future-tab">
-            <div class="row">
-                <div class="col-12 mb-4">
-                    <h5 class="mb-3 text-success"><i class="fa-solid fa-arrow-trend-up me-2"></i> ARIMA &amp; LSTM Modeli ile Turist ve Fiyat Tahmini</h5>
-                    <div style="height: 300px;">
-                        <canvas id="futureChart"></canvas>
-                    </div>
-                </div>
-                <div class="col-12">
-                    <div class="table-responsive">
-                        <table class="table table-hover table-striped align-middle border">
-                            <thead class="table-success">
-                                <tr>
-                                    <th class="ps-3">Tahmin Tarihi</th>
-                                    <th class="text-end">Beklenen Turist</th>
-                                    <th class="text-end pe-3">Beklenen Fiyat</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var metric in futureMetrics)
-                                {
-                                    <tr>
-                                        <td class="ps-3 fw-bold text-success">@metric.DateRecorded.ToString("MMMM yyyy")</td>
-                                        <td class="text-end"><span class="badge bg-success rounded-pill fs-6">@(metric.TouristCount?.ToString("N0") ?? "-")</span></td>
-                                        <td class="text-end pe-3 fw-bold text-danger">@(metric.AvgAccommodationPrice?.ToString("N2") ?? "-") @metric.CurrencyUsed</td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
     </div>
 </div>
 
+<div class="container mb-5">
+
+    @if (!string.IsNullOrWhiteSpace(Model.AboutContent))
+    {
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: 15px; background: #fff;">
+            <div class="card-body p-4">
+                <h4 class="fw-bold text-dark mb-3"><i class="fa-solid fa-compass text-secondary me-2"></i> Bölge Özeti ve Rehber Bilgileri</h4>
+                <div class="text-secondary lh-lg">
+                    <br />
+                    <img src="/images/cities/@(Model.Id).jpg" style="width: 100%; height: auto;" />
+                    <br />
+                    @Html.Raw(Model.AboutContent)
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-6">
+            <div class="card h-100 border-0 shadow-sm" style="border-radius: 15px; border-left: 5px solid #0d6efd !important;">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start">
+                        <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-3 me-3">
+                            <i class="fa-solid fa-users-viewfinder fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold text-dark mb-2">Hacim Öngörüsü</h5>
+                            <p class="text-secondary mb-0">@ViewBag.TouristInsight</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100 border-0 shadow-sm" style="border-radius: 15px; border-left: 5px solid #dc3545 !important;">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start">
+                        <div class="bg-danger bg-opacity-10 text-danger rounded-circle p-3 me-3">
+                            <i class="fa-solid fa-money-bill-wave fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold text-dark mb-2">Fiyatlandırma Trendi</h5>
+                            <p class="text-secondary mb-0">@ViewBag.PriceInsight</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm" style="border-radius: 15px;">
+        <div class="card-header bg-white border-bottom px-4 pt-4 pb-0">
+            <ul class="nav nav-tabs border-bottom-0" id="metricTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active fw-bold px-4 py-3 text-dark border-0 border-bottom border-primary border-3" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab" aria-controls="history" aria-selected="true" style="background-color: transparent;">
+                        <i class="fa-solid fa-clock-rotate-left me-2 text-primary"></i> Gerçekleşen Veriler
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold px-4 py-3 text-secondary border-0" id="future-tab" data-bs-toggle="tab" data-bs-target="#future" type="button" role="tab" aria-controls="future" aria-selected="false" style="background-color: transparent;">
+                        <i class="fa-solid fa-wand-magic-sparkles me-2 text-success"></i> Yapay Zeka Tahminleri
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="tab-content" id="metricTabsContent">
+
+                <div class="tab-pane fade show active p-4" id="history" role="tabpanel" aria-labelledby="history-tab">
+                    <div class="row">
+                        <div class="col-12 mb-5">
+                            <div style="height: 350px;">
+                                <canvas id="historyChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead class="table-light text-secondary">
+                                        <tr>
+                                            <th class="ps-4 border-0">Kayıt Tarihi</th>
+                                            <th class="text-end border-0">Turist Hacmi</th>
+                                            <th class="text-end pe-4 border-0">Ortalama Maliyet</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="border-top-0">
+                                        @foreach (var metric in historicalMetrics)
+                                        {
+                                            <tr>
+                                                <td class="ps-4 fw-bold text-dark">@metric.DateRecorded.ToString("MMMM yyyy")</td>
+                                                <td class="text-end"><span class="badge bg-light text-dark border px-3 py-2 fs-6 rounded-pill">@(metric.TouristCount?.ToString("N0") ?? "-")</span></td>
+                                                <td class="text-end pe-4 fw-bold text-danger">@(metric.AvgAccommodationPrice?.ToString("N2") ?? "-") @metric.CurrencyUsed</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade p-4" id="future" role="tabpanel" aria-labelledby="future-tab">
+                    <div class="row">
+                        <div class="col-12 mb-5">
+                            <div style="height: 350px;">
+                                <canvas id="futureChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead class="table-light text-secondary">
+                                        <tr>
+                                            <th class="ps-4 border-0">Projeksiyon Tarihi</th>
+                                            <th class="text-end border-0">Beklenen Hacim</th>
+                                            <th class="text-end pe-4 border-0">Tahmini Maliyet</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="border-top-0">
+                                        @foreach (var metric in futureMetrics)
+                                        {
+                                            <tr>
+                                                <td class="ps-4 fw-bold text-success">@metric.DateRecorded.ToString("MMMM yyyy")</td>
+                                                <td class="text-end"><span class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-2 fs-6 rounded-pill"><i class="fa-solid fa-robot me-1"></i> @(metric.TouristCount?.ToString("N0") ?? "-")</span></td>
+                                                <td class="text-end pe-4 fw-bold text-danger">@(metric.AvgAccommodationPrice?.ToString("N2") ?? "-") @metric.CurrencyUsed</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .nav-tabs .nav-link {
+        transition: all 0.2s ease;
+    }
+
+        .nav-tabs .nav-link.active {
+            color: #0d6efd !important;
+            border-bottom: 3px solid #0d6efd !important;
+        }
+
+        .nav-tabs .nav-link:hover:not(.active) {
+            color: #0d6efd !important;
+            border-bottom: 3px solid rgba(13,110,253,0.3) !important;
+        }
+</style>
+
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <script>
-
         var histData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(historicalMetrics.OrderBy(x => x.DateRecorded).Select(x => new { Date = x.DateRecorded.ToString("MMM yy"), Tourists = x.TouristCount ?? 0, Price = x.AvgAccommodationPrice ?? 0 })));
-
         var futData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(futureMetrics.OrderBy(x => x.DateRecorded).Select(x => new { Date = x.DateRecorded.ToString("MMM yy"), Tourists = x.TouristCount ?? 0, Price = x.AvgAccommodationPrice ?? 0 })));
 
         const getDualAxisScales = () => ({
+            x: { grid: { display: false } },
             y: {
-                type: 'linear',
-                display: true,
-                position: 'left',
-                beginAtZero: true,
-                title: { display: true, text: 'Turist Sayısı' },
+                type: 'linear', display: true, position: 'left', beginAtZero: true,
+                border: { display: false },
+                title: { display: true, text: 'Turist Sayısı', font: { weight: 'bold' } },
                 ticks: { callback: function(value) { return value.toLocaleString('tr-TR'); } }
             },
             y1: {
-                type: 'linear',
-                display: true,
-                position: 'right',
-                beginAtZero: true,
-                title: { display: true, text: 'Konaklama Fiyatı' },
+                type: 'linear', display: true, position: 'right', beginAtZero: true,
+                border: { display: false },
+                title: { display: true, text: 'Konaklama Fiyatı', font: { weight: 'bold' } },
                 grid: { drawOnChartArea: false },
                 ticks: { callback: function(value) { return value.toLocaleString('tr-TR'); } }
             }
         });
 
+        const tooltipConfig = {
+            backgroundColor: 'rgba(0,0,0,0.8)', padding: 12,
+            callbacks: {
+                label: function(context) {
+                    let label = context.dataset.label || '';
+                    if (label) label += ': ';
+                    if (context.datasetIndex === 0) label += context.parsed.y.toLocaleString('tr-TR') + ' Kişi';
+                    else label += context.parsed.y.toLocaleString('tr-TR') + ' Birim';
+                    return label;
+                }
+            }
+        };
+
         if (histData.length > 0) {
             new Chart(document.getElementById('historyChart').getContext('2d'), {
-                type: 'line',
+                type: 'bar',
                 data: {
                     labels: histData.map(d => d.Date),
                     datasets: [
                         {
+                            type: 'bar',
                             label: 'Turist Sayısı',
                             data: histData.map(d => d.Tourists),
-                            borderColor: '#0d6efd',
-                            backgroundColor: 'rgba(13, 110, 253, 0.1)',
-                            borderWidth: 2,
-                            yAxisID: 'y',
-                            tension: 0.3
+                            backgroundColor: 'rgba(13, 110, 253, 0.8)',
+                            borderRadius: 4,
+                            yAxisID: 'y'
                         },
                         {
+                            type: 'line',
                             label: 'Ortalama Konaklama Fiyatı',
                             data: histData.map(d => d.Price),
                             borderColor: '#dc3545',
-                            backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                            borderWidth: 2,
+                            backgroundColor: '#dc3545',
+                            borderWidth: 3,
                             yAxisID: 'y1',
-                            tension: 0.3
+                            tension: 0.4,
+                            pointRadius: 4
                         }
                     ]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
+                    responsive: true, maintainAspectRatio: false,
                     interaction: { mode: 'index', intersect: false },
+                    plugins: { tooltip: tooltipConfig, legend: { position: 'top' } },
                     scales: getDualAxisScales()
                 }
             });
@@ -208,29 +284,41 @@
                             label: 'Beklenen Turist',
                             data: futData.map(d => d.Tourists),
                             borderColor: '#198754',
-                            borderWidth: 2,
-                            borderDash: [5, 5],
+                            backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
                             yAxisID: 'y',
-                            tension: 0.3
+                            tension: 0.4,
+                            pointRadius: 5
                         },
                         {
                             label: 'Beklenen Fiyat',
                             data: futData.map(d => d.Price),
                             borderColor: '#dc3545',
-                            borderWidth: 2,
+                            borderWidth: 3,
                             borderDash: [5, 5],
                             yAxisID: 'y1',
-                            tension: 0.3
+                            tension: 0.4,
+                            pointRadius: 5
                         }
                     ]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
+                    responsive: true, maintainAspectRatio: false,
                     interaction: { mode: 'index', intersect: false },
+                    plugins: { tooltip: tooltipConfig, legend: { position: 'top' } },
                     scales: getDualAxisScales()
                 }
             });
         }
+
+        document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(function(el) {
+            el.addEventListener('shown.bs.tab', function() {
+                var tabId = el.getAttribute('data-bs-target').substring(1);
+                var chartId = tabId + 'Chart';
+                var chart = Chart.getChart(chartId);
+                if (chart) chart.update();
+            });
+        });
     </script>
 }

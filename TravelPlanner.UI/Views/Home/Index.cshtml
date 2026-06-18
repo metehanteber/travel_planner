@@ -1,66 +1,136 @@
-﻿@using TravelPlanner.Data.Entities
-@model List<Country>
-
-@{
+﻿@{
     ViewData["Title"] = "Ana Sayfa";
+    var popularCountries = ViewBag.PopularCountries as List<TravelPlanner.Data.Entities.Country> ?? new List<TravelPlanner.Data.Entities.Country>();
 }
 
-<div class="row mb-4 mt-3">
-    <div class="col-12">
-        <div class="card border-0 shadow-sm rounded-4" style="background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%); color: white;">
-            <div class="card-body p-5">
-                <h1 class="display-5 fw-bold"><i class="fa-solid fa-plane-departure me-3"></i>Seyahat Asistanı</h1>
-                <p class="lead mt-3">
-                    Ülkelere ve bölgelere ait turizm verileri ve tahminleri
-                </p>
-                <a href="/Forecast" class="btn btn-light btn-lg text-primary fw-bold rounded-pill mt-2 shadow-sm">
-                    <i class="fa-solid fa-chart-line"></i> Tahminler <i class="fa-solid fa-arrow-right ms-2"></i>
-                </a>
+<div class="position-relative overflow-hidden shadow-sm mb-5" style="border-radius: 0 0 2rem 2rem; height: 65vh; min-height: 500px;">
+
+    <div id="heroCarousel" class="carousel slide carousel-fade h-100" data-bs-ride="carousel" data-bs-pause="false" data-bs-interval="5000">
+        <div class="carousel-inner h-100">
+            <div class="carousel-item active h-100">
+                <img src="/images/cities/21.jpg" class="d-block w-100 h-100" style="object-fit: cover; filter: brightness(0.4);" alt="Tatil Rotası">
+            </div>
+            <div class="carousel-item h-100">
+                <img src="/images/cities/22.jpg" class="d-block w-100 h-100" style="object-fit: cover; filter: brightness(0.4);" alt="Deniz ve Kum">
+            </div>
+        </div>
+    </div>
+
+    <div style="z-index: 99999;" class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center text-center z-3 px-3">
+        <h1 class="display-3 fw-bolder mb-4 text-white drop-shadow">Hayalinizdeki Rotayı Keşfedin</h1>
+        <p class="lead fs-4 mb-5 text-light w-75 mx-auto drop-shadow-sm">Tatil planınızı şansa bırakmayın. Dünyanın dört bir yanındaki en iyi destinasyonları, en uygun zamanlarda keşfetmeniz için rehberiniz burada.</p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="#destinasyonlar" class="btn btn-primary btn-lg px-5 rounded-pill fw-bold shadow-lg bg-gradient border-0">Kataloğu İncele <i class="fa-solid fa-arrow-down ms-2"></i></a>
+        </div>
+    </div>
+</div>
+
+<div class="container mb-5 pb-4 border-bottom">
+    <div class="row g-4 text-center">
+        <div class="col-md-4">
+            <div class="card border-0 bg-light h-100 p-4 shadow-sm hover-lift" style="border-radius: 1.5rem;">
+                <div class="display-4 text-primary mb-3"><i class="fa-solid fa-map-location-dot"></i></div>
+                <h4 class="fw-bold text-dark">Doğru Zaman, Doğru Yer</h4>
+                <p class="text-secondary mb-0">Gitmek istediğiniz bölgenin en ideal dönemini bulun, kalabalıktan kaçının veya sezonun tadını çıkarın.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 bg-light h-100 p-4 shadow-sm hover-lift" style="border-radius: 1.5rem;">
+                <div class="display-4 text-success mb-3"><i class="fa-solid fa-wallet"></i></div>
+                <h4 class="fw-bold text-dark">Bütçe Optimizasyonu</h4>
+                <p class="text-secondary mb-0">Gideceğiniz ülkedeki konaklama maliyeti trendlerini önceden görün, tatilinizi en uygun bütçeyle planlayın.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 bg-light h-100 p-4 shadow-sm hover-lift" style="border-radius: 1.5rem;">
+                <div class="display-4 text-danger mb-3"><i class="fa-solid fa-compass"></i></div>
+                <h4 class="fw-bold text-dark">Kişiselleştirilmiş Keşif</h4>
+                <p class="text-secondary mb-0">Gizli kalmış rotaları, popülerleşen tatil bölgelerini ve size en uygun alternatifleri saniyeler içinde süzün.</p>
             </div>
         </div>
     </div>
 </div>
 
-<div class="row mb-5">
-    <div class="col-md-4 mb-3">
-        <div class="card border-0 shadow-sm rounded-4 h-100">
-            <div class="card-body d-flex align-items-center">
-                <div class="flex-shrink-0 bg-primary bg-opacity-10 p-3 rounded-4">
-                    <i class="fa-solid fa-earth-europe fa-2x text-primary"></i>
-                </div>
-                <div class="flex-grow-1 ms-3">
-                    <h6 class="text-muted mb-0">Ülke Sayısı</h6>
-                    <h2 class="fw-bold mb-0">@ViewBag.CountryCount</h2>
-                </div>
-            </div>
-        </div>
+<div id="destinasyonlar" class="container mb-5 pb-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <h2 class="fw-bold text-dark mb-0"><i class="fa-solid fa-fire text-warning me-2"></i> Öne Çıkan Destinasyonlar</h2>
     </div>
 
-    <div class="col-md-4 mb-3">
-        <div class="card border-0 shadow-sm rounded-4 h-100">
-            <div class="card-body d-flex align-items-center">
-                <div class="flex-shrink-0 bg-success bg-opacity-10 p-3 rounded-4">
-                    <i class="fa-solid fa-city fa-2x text-success"></i>
-                </div>
-                <div class="flex-grow-1 ms-3">
-                    <h6 class="text-muted mb-0">Şehir Sayısı</h6>
-                    <h2 class="fw-bold mb-0">@ViewBag.CityCount</h2>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div class="row g-4">
+        @if (popularCountries.Any())
+        {
+            var colors = new[] { "linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)", "linear-gradient(135deg, #8E2DE2 0%, #4A00E0 100%)", "linear-gradient(135deg, #00b09b 0%, #96c93d 100%)" };
+            int i = 0;
 
-    <div class="col-md-4 mb-3">
-        <div class="card border-0 shadow-sm rounded-4 h-100">
-            <div class="card-body d-flex align-items-center">
-                <div class="flex-shrink-0 bg-warning bg-opacity-10 p-3 rounded-4">
-                    <i class="fa-solid fa-brain fa-2x text-warning"></i>
+            foreach (var country in popularCountries)
+            {
+                <div class="col-md-6 col-lg-3">
+                    <div class="card h-100 border-0 shadow-sm destination-card" style="border-radius: 1.5rem; overflow: hidden;">
+                        <div class="text-white p-4 d-flex flex-column justify-content-center position-relative" style="background: @colors[i % colors.Length]; min-height: 180px;">
+                            <img src="/images/flags/@(country.Code.ToLower()).jpg" class="position-absolute top-0 end-0 opacity-25 w-50 h-100" style="object-fit: cover; mask-image: linear-gradient(to left, rgba(0,0,0,1), rgba(0,0,0,0)); -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,1), rgba(0,0,0,0));" alt="">
+                            <div class="position-relative z-1">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h2 class="fw-bolder mb-0">@country.Name</h2>
+                                </div>
+                                <p class="text-white-75 mb-0 fs-6">Unutulmaz anılar biriktireceğiniz muhteşem bir macera sizi bekliyor.</p>
+                            </div>
+                        </div>
+                        <div class="card-body p-4 bg-white d-flex align-items-center">
+                            <a href="/country/@country.Code.ToLower()" class="btn btn-outline-primary w-100 rounded-pill fw-bold py-2">Hemen Keşfet <i class="fa-solid fa-arrow-right ms-2"></i></a>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex-grow-1 ms-3">
-                    <h6 class="text-muted mb-0">Tahmin Sayısı</h6>
-                    <h2 class="fw-bold mb-0">@ViewBag.ForecastCount</h2>
-                </div>
+                i++;
+            }
+        }
+        else
+        {
+            <div class="col-12 text-center text-muted py-5">
+                <i class="fa-solid fa-globe fs-1 mb-3"></i>
+                <h5>Şu an için öne çıkan ülke bulunmamaktadır.</h5>
             </div>
+        }
+    </div>
+</div>
+
+<div class="container mb-5">
+    <div class="card border-0 shadow-lg text-white text-center position-relative overflow-hidden" style="border-radius: 2rem; background: linear-gradient(45deg, #ff6b6b, #c0392b);">
+        <div class="position-absolute top-50 start-50 translate-middle w-100 h-100" style="background: url('/images/page/circle-pattern.svg') repeat;"></div>
+        <div class="card-body p-5 position-relative z-1">
+            <h2 class="fw-bolder display-6 mb-3 drop-shadow">Dünyayı Keşfetmek İçin Doğru Zamanı Beklemeyin!</h2>
+            <p class="fs-4 fw-light mb-0 drop-shadow-sm">O doğru zamanı, sizin için biz bulalım.</p>
         </div>
     </div>
 </div>
+
+<style>
+    .destination-card {
+        transition: all 0.3s ease;
+        cursor: default;
+    }
+
+        .destination-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15) !important;
+        }
+
+    .hover-lift {
+        transition: transform 0.2s;
+    }
+
+        .hover-lift:hover {
+            transform: translateY(-5px);
+        }
+
+    .drop-shadow {
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .drop-shadow-sm {
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+</style>

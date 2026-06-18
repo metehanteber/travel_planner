@@ -61,6 +61,7 @@ namespace TravelPlanner.Data.Entities
                 entity.Property(e => e.Guid).HasColumnName("guid");
                 entity.Property(e => e.IsDeleted).HasColumnName("is_deleted");
                 entity.Property(e => e.ExchangeCode).HasColumnName("exchange_code");
+                entity.Property(e => e.AboutContent).HasColumnName("about_content");
 
                 entity.Property(e => e.Name).HasColumnName("name").HasMaxLength(100).IsRequired();
                 entity.Property(e => e.Code).HasColumnName("code").HasMaxLength(10).IsRequired();
@@ -76,6 +77,7 @@ namespace TravelPlanner.Data.Entities
                 entity.Property(e => e.AdditionalData).HasColumnName("additional_data");
                 entity.Property(e => e.CountryId).HasColumnName("country_id");
                 entity.Property(e => e.Name).HasColumnName("name").IsRequired();
+                entity.Property(e => e.AboutContent).HasColumnName("about_content");
 
                 entity.HasOne(d => d.Country).WithMany(p => p.Cities).HasForeignKey(d => d.CountryId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("fk_cities_countries");
             });
