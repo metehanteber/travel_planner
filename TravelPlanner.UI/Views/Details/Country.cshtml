@@ -16,7 +16,7 @@
                          style="height: 1.1em; width: auto; object-fit: cover; border: 3px solid white;" />
                     @Model.Name
                 </h1>
-                <p class="text-secondary fs-5 mb-0">Ülke genelindeki makroekonomik eğilimleri ve turistik bölgelerin potansiyellerini yapay zeka gücüyle keşfedin.</p>
+                <p class="text-secondary fs-5 mb-0">Ülke genelindeki turistik bölgelerin potansiyellerini keşfedin.</p>
             </div>
             <div class="col-md-4 text-end mt-4 mt-md-0">
                 <div class="card shadow border-0 bg-white" style="border-radius: 15px;">
@@ -58,7 +58,7 @@
 
     <div class="d-flex align-items-center mb-4">
         <i class="fa-solid fa-map-location-dot fs-3 text-primary me-3"></i>
-        <h2 class="fw-bold mb-0">Öne Çıkan Destinasyonlar</h2>
+        <h2 class="fw-bold mb-0">Öne Çıkan Bölgeler</h2>
     </div>
 
     <div class="row row-cols-1 row-cols-md-3 g-4 mb-5">
@@ -87,19 +87,19 @@
                                     </div>
                                     <hr class="my-2 bg-secondary opacity-25">
                                     <div class="text-end text-muted" style="font-size: 0.75rem;">
-                                        Güncelleme: @metric.DateRecorded.ToString("MMM yyyy")
+                                        Son Güncelleme: @metric.DateRecorded.ToString("MMM yyyy")
                                     </div>
                                 }
                                 else
                                 {
                                     <div class="text-center py-3 text-muted">
                                         <i class="fa-solid fa-hourglass-half mb-2 fs-5"></i><br />
-                                        Veriler analiz ediliyor...
+                                        Veriler yükleniyor...
                                     </div>
                                 }
                             </div>
                             <a href="/city/@city.Id" class="btn btn-primary w-100 stretched-link fw-bold" style="border-radius: 10px;">
-                                Destinasyonu İncele <i class="fa-solid fa-arrow-right ms-1"></i>
+                                İncele <i class="fa-solid fa-arrow-right ms-1"></i>
                             </a>
                         </div>
                     </div>
